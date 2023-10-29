@@ -10,31 +10,35 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Header } from 'react-native-elements';
-import { color } from 'react-native-elements/dist/helpers';
 
 const TodoInput = () => {
-  const [todoText, setTodoText] = useState('');
-  const [todos, setTodos] = useState([]);
-  const [editingTodoIndex, setEditingTodoIndex] = useState(null);
-  const [editedText, setEditedText] = useState('');
-  const [selectedTodos, setSelectedTodos] = useState([]);
-  const [completedTasks, setCompletedTasks] = useState([]);
-  const [selectedCompletedTasks, setSelectedCompletedTasks] = useState([]);
+  // Define and initialize state variables
+  const [todoText, setTodoText] = useState(''); // Input field value
+  const [todos, setTodos] = useState([]); // List of todos
+  const [editingTodoIndex, setEditingTodoIndex] = useState(null); // Index of the todo being edited
+  const [editedText, setEditedText] = useState(''); // Text for editing a todo
+  const [selectedTodos, setSelectedTodos] = useState([]); // List of selected todos
+  const [completedTasks, setCompletedTasks] = useState([]); // List of completed tasks
+  const [selectedCompletedTasks, setSelectedCompletedTasks] = useState([]); // List of selected completed tasks
 
   useEffect(() => {
+    // Load todos and completed tasks from AsyncStorage when the component mounts
     loadTodosFromStorage();
     loadCompletedTasksFromStorage();
   }, []);
 
   useEffect(() => {
     // This effect will run whenever completedTasks changes
+    // Save completed tasks to AsyncStorage to keep them persistent
     saveCompletedTasksToStorage(completedTasks);
   }, [completedTasks]);
 
   const loadTodosFromStorage = async () => {
     try {
+      // Load todos from AsyncStorage
       const savedTodos = await AsyncStorage.getItem('todos');
       if (savedTodos !== null) {
+        // Update the state with the loaded todos
         setTodos(JSON.parse(savedTodos));
       }
     } catch (error) {
@@ -44,8 +48,10 @@ const TodoInput = () => {
 
   const loadCompletedTasksFromStorage = async () => {
     try {
+      // Load completed tasks from AsyncStorage
       const savedCompletedTasks = await AsyncStorage.getItem('completedTasks');
       if (savedCompletedTasks !== null) {
+        // Update the state with the loaded completed tasks
         setCompletedTasks(JSON.parse(savedCompletedTasks));
       }
     } catch (error) {
@@ -55,6 +61,7 @@ const TodoInput = () => {
 
   const saveTodosToStorage = async (updatedTodos) => {
     try {
+      // Save the updated list of todos to AsyncStorage
       await AsyncStorage.setItem('todos', JSON.stringify(updatedTodos));
     } catch (error) {
       console.error('Error saving todos to AsyncStorage: ', error);
@@ -63,6 +70,7 @@ const TodoInput = () => {
 
   const saveCompletedTasksToStorage = async (updatedCompletedTasks) => {
     try {
+      // Save the updated list of completed tasks to AsyncStorage
       await AsyncStorage.setItem('completedTasks', JSON.stringify(updatedCompletedTasks));
     } catch (error) {
       console.error('Error saving completed tasks to AsyncStorage: ', error);
@@ -70,14 +78,19 @@ const TodoInput = () => {
   };
 
   const handleInputChange = (text) => {
+    // Update the todoText state with the text entered in the input field
     setTodoText(text);
   };
 
   const handleAddTodo = () => {
     if (todoText.trim() !== '') {
+      // Create a new todo object and add it to the todos list
       const updatedTodos = [...todos, { text: todoText }];
+      // Update the state with the new list of todos
       setTodos(updatedTodos);
+      // Save the updated list of todos to AsyncStorage
       saveTodosToStorage(updatedTodos);
+      // Clear the input field
       setTodoText('');
     } else {
       // Show an alert if the input is empty
@@ -86,11 +99,13 @@ const TodoInput = () => {
   };
 
   const handleLongPress = (index) => {
+    // Set the editingTodoIndex and initialize the editedText with the current todo's text
     setEditingTodoIndex(index);
     setEditedText(todos[index].text);
   };
 
   const handleEditTodo = () => {
+    // Update the text of the todo being edited and save it
     const updatedTodos = [...todos];
     updatedTodos[editingTodoIndex].text = editedText;
     setTodos(updatedTodos);
@@ -99,6 +114,7 @@ const TodoInput = () => {
   };
 
   const handleToggleSelectTodo = (index) => {
+    // Toggle the selection of a todo
     if (selectedTodos.includes(index)) {
       setSelectedTodos(selectedTodos.filter((item) => item !== index));
     } else {
@@ -107,6 +123,7 @@ const TodoInput = () => {
   };
 
   const handleToggleSelectCompletedTask = (index) => {
+    // Toggle the selection of a completed task
     if (selectedCompletedTasks.includes(index)) {
       setSelectedCompletedTasks(selectedCompletedTasks.filter((item) => item !== index));
     } else {
@@ -115,10 +132,12 @@ const TodoInput = () => {
   };
 
   const handleMoveToCompletedTask = () => {
+    // Move selected todos to the completed tasks
     const doneTasks = selectedTodos.map((index) => todos[index].text);
     const updatedCompletedTasks = [...completedTasks, ...doneTasks];
     setCompletedTasks(updatedCompletedTasks);
 
+    // Remove selected todos from the todos list
     const updatedTodos = todos.filter((_, index) => !selectedTodos.includes(index));
     setTodos(updatedTodos);
     setSelectedTodos([]);
@@ -129,11 +148,11 @@ const TodoInput = () => {
     const updatedTodos = todos.filter((_, index) => !selectedTodos.includes(index));
     setTodos(updatedTodos);
     setSelectedTodos([]);
-  
+
     // Delete selected completed tasks
     const updatedCompleted = completedTasks.filter((_, index) => !selectedCompletedTasks.includes(index));
     setCompletedTasks(updatedCompleted);
-  
+
     // Save the updated data to AsyncStorage to reflect the changes
     await saveTodosToStorage(updatedTodos);
     await saveCompletedTasksToStorage(updatedCompleted);
